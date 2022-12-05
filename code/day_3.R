@@ -47,9 +47,28 @@ test %>%
 # then get priority for letters
 # sum priority 
 knapsack %>%
-  mutate(elf = rep(c(1,2,3),100)) %>%
-  pivot_wider(values_from = input,names_from = elf) %>%
-  head
+  mutate(elf = factor(rep(c('elf1','elf2','elf3'),100)),
+         id = rep(1:100, each=3)) %>%
+  pivot_wider(values_from = input,names_from = elf) -> test 
+  
+# now onto checking letters!!
+dupe_letter <- c()
+for(i in 1:100){
+  split_str <- str_split(test$elf1[i],boundary("character"))
+  # check each letter in first elf to see if in both 2nd and 3rd elf
+  temp <- to_vec(for(letter in split_str[[1]]) if(str_detect(test$elf2[i],letter) & str_detect(test$elf3[i],letter)) letter) 
+  print(temp[1]) # take the first thing, sometimes the letter is found more than once in second string
+  dupe_letter[i] <- temp[1]
+}
+
+test %>%
+  mutate(priority = case_when(
+    str_detect(dupe_letter,"[[:upper:]]") ~ as.character(match(str_to_upper(dupe_letter), LETTERS)+26),
+    str_detect(dupe_letter,"[[:lower:]]") ~ as.character(match(str_to_upper(dupe_letter), LETTERS)),
+    TRUE ~ 'kdfkd'
+  )) %>%
+  summarise(total_priority = sum(as.numeric(priority)))
+# 2434
   
 ## dumping ground code 
 "p" %in% "hPhbpfWzfbwfPmpprb"
